@@ -4,12 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'リリースPR番号'
-        required: true
-        type: string
 
 jobs:
   list-prs:
@@ -34,12 +28,7 @@ jobs:
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
           # ActionsがトリガーされたPRの番号を取得
-          TRIGGER_PR_NUMBER=""
-          if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-            TRIGGER_PR_NUMBER=${{ github.event.inputs.pr_number }}
-          elif [[ ${{ github.event_name }} == 'push' ]]; then
-            TRIGGER_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
-          fi
+          TRIGGER_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
 
           # ActionsがトリガーされたPRに含まれるコミットを取得
           COMMIT_OIDS=$(gh pr view $TRIGGER_PR_NUMBER --json commits --jq '.commits[].oid')
