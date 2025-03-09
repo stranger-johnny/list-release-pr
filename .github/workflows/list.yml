@@ -59,16 +59,15 @@ jobs:
             PR_TITLE="${PR_TITLE_BY_NUMBER[$PR_NUMBER]}"
 
             # authorごとにPRをまとめる
-            PRS_BY_AUTHOR["$PR_AUTHOR"]+="- <$PR_LINK|#$PR_NUMBER> $PR_TITLE\n "
+            PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE"
           done
 
-          SLACK_TEXT=""
+          PR_LIST=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
-            SLACK_TEXT+=$(printf "%s\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
+            PR_LIST+=$(printf "%s\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
           done
 
-          #   echo "$SLACK_JSON"
-          echo "pr_list=$(jq -R -s . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
+          echo "pr_list=$(jq -R -s . <<< "$PR_LIST")" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
