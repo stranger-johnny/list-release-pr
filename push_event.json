@@ -1,0 +1,15 @@
+{
+    "repository": {
+      "name": "list-release-pr",
+      "owner": {
+        "login": "stranger-johnny"
+      }
+    },
+    "head_commit": {
+      "id": "6898a3d64089d2e548cbc3e89071376143685484",
+      "author": {
+        "name": "stranger-johnny"
+      }
+    }
+  }
+  
