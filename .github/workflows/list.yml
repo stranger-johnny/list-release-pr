@@ -28,10 +28,10 @@ jobs:
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
           # ActionsがトリガーされたPRの番号を取得
-          MERGED_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
+          TRIGGER_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
 
           # ActionsがトリガーされたPRに含まれるコミットを取得
-          COMMIT_OIDS=$(gh pr view $MERGED_PR_NUMBER --json commits --jq '.commits[].oid')
+          COMMIT_OIDS=$(gh pr view $TRIGGER_PR_NUMBER --json commits --jq '.commits[].oid')
 
           # ActionsがトリガーされたPRに含まれるコミットからメタデータを取得
           for COMMIT_OID in $COMMIT_OIDS; do
@@ -41,7 +41,7 @@ jobs:
             PR_NUMBER=$(echo "$PR_DETAILS" | jq -r '.number')
 
             # 一度取得したPRはスキップ、またActionsがトリガーされたPRと同じPRもスキップ
-            if [[ " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]] || [[ "$PR_NUMBER" == "$MERGED_PR_NUMBER" ]]; then
+            if [[ " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]] || [[ "$PR_NUMBER" == "$TRIGGER_PR_NUMBER" ]]; then
               continue
             fi
 
@@ -52,7 +52,7 @@ jobs:
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
           done
 
-          # PRがない場合はhotfix扱いとして、このPRをリストに追加
+          # PRがない場合はhotfix扱いとして、ActionsがトリガーされたPRをリストに追加
           if [ ${#PR_NUMBERS[@]} -eq 0 ]; then
             PR_NUMBER=${{ github.event.pull_request.number }}
             PR_AUTHOR=${{github.event.pull_request.user.login}}
