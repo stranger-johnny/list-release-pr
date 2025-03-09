@@ -87,6 +87,7 @@ jobs:
           done
 
           # すべてのPRをテキストとして出力
+          PR_LIST=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
             PR_LIST+=$(printf "*%s*\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
           done
