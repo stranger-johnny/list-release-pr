@@ -68,7 +68,7 @@ jobs:
           done
 
           #   echo "$SLACK_JSON"
-          echo "pr_list=$(jq -Rs . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
+          echo "pr_list=$(jq -R -s . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
