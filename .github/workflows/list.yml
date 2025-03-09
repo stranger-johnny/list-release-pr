@@ -64,7 +64,7 @@ jobs:
 
           SLACK_TEXT=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
-            SLACK_TEXT+=$(printf "%s\n%s\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
+            SLACK_TEXT+=$(printf "%s\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
           done
 
           #   echo "$SLACK_JSON"
