@@ -34,6 +34,7 @@ jobs:
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
           # ActionsがトリガーされたPRの番号を取得
+          TRIGGER_PR_NUMBER=""
           if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
             TRIGGER_PR_NUMBER=${{ github.event.inputs.pr_number }}
           elif [[ ${{ github.event_name }} == 'push' ]]; then
