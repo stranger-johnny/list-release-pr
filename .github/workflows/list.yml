@@ -64,11 +64,11 @@ jobs:
 
           SLACK_TEXT=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
-            SLACK_TEXT+=$(printf "%s\n%s\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
+            SLACK_TEXT+="$AUTHOR\n${PRS_BY_AUTHOR[$AUTHOR]}\n"
           done
 
           #   echo "$SLACK_JSON"
-          echo "pr_list=$(jq -R -s . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
+          echo "pr_list=$(jq -Rs . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
