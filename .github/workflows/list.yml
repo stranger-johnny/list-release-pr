@@ -27,21 +27,21 @@ jobs:
           REPO_OWNER=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f1)
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
-          # Actionsが実行時にマージされたPRの番号を取得
+          # ActionsがトリガーされたPRの番号を取得
           MERGED_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
 
-          # マージされたPRに含まれるコミットを取得
+          # ActionsがトリガーされたPRに含まれるコミットを取得
           COMMIT_OIDS=$(gh pr view $MERGED_PR_NUMBER --json commits --jq '.commits[].oid')
 
-          # PRに含まれるコミットからPRのメタデータを取得する
+          # ActionsがトリガーされたPRに含まれるコミットからメタデータを取得
           for COMMIT_OID in $COMMIT_OIDS; do
             echo "Commit: $COMMIT_OID"
 
             PR_DETAILS=$(gh pr list --search "$COMMIT_OID" --state merged --json number,author,title --jq '.[0]')
             PR_NUMBER=$(echo "$PR_DETAILS" | jq -r '.number')
 
-            # 一度取得したPRはスキップする
-            if [[ " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]]; then
+            # 一度取得したPRはスキップ、またActionsがトリガーされたPRと同じPRもスキップ
+            if [[ ! " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]] && [[ "$PR_NUMBER" != "$MERGED_PR_NUMBER" ]]; then
               continue
             fi
 
