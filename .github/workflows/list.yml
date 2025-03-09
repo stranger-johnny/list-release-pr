@@ -59,7 +59,7 @@ jobs:
             PR_TITLE="${PR_TITLE_BY_NUMBER[$PR_NUMBER]}"
 
             # authorごとにPRをまとめる
-            PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE"
+            PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE\n"
           done
 
           PR_LIST=""
