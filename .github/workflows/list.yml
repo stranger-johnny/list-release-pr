@@ -117,7 +117,7 @@ jobs:
                     "type": "mrkdwn",
                     "text": "*リリース予定のPR一覧*"
                   }
-                }
+                },
                 {
                   "type": "section",
                   "text": {
