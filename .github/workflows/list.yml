@@ -54,11 +54,12 @@ jobs:
 
           # PRがない場合はhotfix扱いとして、ActionsがトリガーされたPRをリストに追加
           if [ ${#PR_NUMBERS[@]} -eq 0 ]; then
-            PR_NUMBER=${{ github.event.pull_request.number }}
-            PR_AUTHOR=${{github.event.pull_request.user.login}}
-            PR_TITLE=${{github.event.pull_request.title}}
-            PR_NUMBER=${{ github.event.pull_request.number }}
-            PR_NUMBERS+=("${{ github.event.pull_request.number }}") 
+            TRIGGER_PR_DETAILS=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json author,title --jq '.[0]')
+            PR_AUTHOR=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.author.login')
+            PR_TITLE=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.title')
+
+            PR_NUMBER=$TRIGGER_PR_NUMBER
+            PR_NUMBERS+=($PR_NUMBER) 
 
             PR_AUTHOR_BY_NUMBER["$PR_NUMBER"]="$PR_AUTHOR"
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
