@@ -78,6 +78,7 @@ jobs:
           )
 
           #   echo "$SLACK_JSON"
+          echo "aaa"
           COMPRESSED_JSON=$(echo "$SLACK_JSON" | jq -c .)
           echo "pr_numbers=$(printf '%s\n' "${PR_NUMBERS[@]}" | jq -c -s '.')" >> $GITHUB_OUTPUT
           
