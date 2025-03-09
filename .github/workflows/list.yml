@@ -28,7 +28,8 @@ jobs:
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
           # PRに含まれるコミットを取得
-          echo ${{ github.event.pull_request.head.sha }}
+          echo ${{ github.event.head_commit.sha }}
+          echo ${{ github.event.head_commit.id }}
           COMMIT_OIDS=$(gh pr view ${{ github.event.pull_request.number }} --json commits --jq '.commits[].oid')
 
           # PRに含まれるコミットからPRのメタデータを取得
