@@ -83,7 +83,7 @@ jobs:
           echo "pr_numbers=$(printf '%s\n' "${PR_NUMBERS[@]}" | jq -c -s '.')" >> $GITHUB_OUTPUT
           
           echo "$COMPRESSED_JSON"
-          echo "pr_list=$(echo "$SLACK_TEXT" | jq -c .)"
+          echo "pr_list=$(jq -R -s . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
           echo "slack_message_json=$COMPRESSED_JSON" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
