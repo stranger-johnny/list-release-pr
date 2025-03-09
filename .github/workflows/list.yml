@@ -50,11 +50,13 @@ jobs:
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
           done
 
-          # PRがない場合はhotfix扱いとして、このPRのAuthorとTitleを取得する
+          # PRがない場合はhotfix扱いとして、このPRをリストに追加する
           if [ ${#PR_NUMBERS[@]} -eq 0 ]; then
+            PR_NUMBER=${{ github.event.pull_request.number }}
             PR_AUTHOR=${{github.event.pull_request.user.login}}
             PR_TITLE=${{github.event.pull_request.title}}
-            PR_NUMBER=${{ github.event.pull_request.number }} 
+            PR_NUMBER=${{ github.event.pull_request.number }}
+            PR_NUMBERS+=("${{ github.event.pull_request.number }}") 
 
             PR_AUTHOR_BY_NUMBER["$PR_NUMBER"]="$PR_AUTHOR"
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
