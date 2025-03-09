@@ -31,7 +31,7 @@ jobs:
           # PRに含まれるコミットを取得
           COMMIT_OIDS=$(gh pr view ${{ github.event.pull_request.number }} --json commits --jq '.commits[].oid')
 
-          # PRに含まれるコミットからPRのメタデータを取得
+          # PRに含まれるコミットからPRのメタデータを取得する
           for COMMIT_OID in $COMMIT_OIDS; do
             echo "Commit: $COMMIT_OID"
 
@@ -50,7 +50,19 @@ jobs:
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
           done
 
-          # PRリンクを作成し、Authorごとにグループ化
+          # PRがない場合はhotfix扱いとして、このPRをリストに追加する
+          if [ ${#PR_NUMBERS[@]} -eq 0 ]; then
+            PR_NUMBER=${{ github.event.pull_request.number }}
+            PR_AUTHOR=${{github.event.pull_request.user.login}}
+            PR_TITLE=${{github.event.pull_request.title}}
+            PR_NUMBER=${{ github.event.pull_request.number }}
+            PR_NUMBERS+=("${{ github.event.pull_request.number }}") 
+
+            PR_AUTHOR_BY_NUMBER["$PR_NUMBER"]="$PR_AUTHOR"
+            PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
+          fi
+
+          # PRのリンクを作成し、Authorごとにグループ化する
           for PR_NUMBER in "${PR_NUMBERS[@]}"; do
             PR_LINK="https://github.com/$REPO_OWNER/$REPO_NAME/pull/$PR_NUMBER"
             PR_LINK_BY_NUMBER["$PR_NUMBER"]="$PR_LINK"
@@ -61,7 +73,7 @@ jobs:
             PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE\n"
           done
 
-          # すべてのPRリストをテキストとして出力
+          # すべてのPRをテキストとして出力
           PR_LIST=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
             PR_LIST+=$(printf "*%s*\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
