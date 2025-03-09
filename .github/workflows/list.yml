@@ -97,7 +97,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*リリース予定のPR一覧*"
+                    "text": "*リリース予定のPR一覧です*"
                   }
                 },
                 {
