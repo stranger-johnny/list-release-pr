@@ -27,10 +27,11 @@ jobs:
           REPO_OWNER=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f1)
           REPO_NAME=$(echo "${GITHUB_REPOSITORY}" | cut -d'/' -f2)
 
-          # PRに含まれるコミットを取得
-          echo ${{ github.event.head_commit.sha }}
-          echo ${{ github.event.head_commit.id }}
-          COMMIT_OIDS=$(gh pr view ${{ github.event.pull_request.number }} --json commits --jq '.commits[].oid')
+          # Actionsが実行時にマージされたPRの番号を取得
+          MERGED_PR_NUMBER=$(gh pr list --search ${{ github.event.head_commit.id }} --state merged --json number --jq '.[].number')
+
+          # マージされたPRに含まれるコミットを取得
+          COMMIT_OIDS=$(gh pr view $MERGED_PR_NUMBER --json commits --jq '.commits[].oid')
 
           # PRに含まれるコミットからPRのメタデータを取得
           for COMMIT_OID in $COMMIT_OIDS; do
