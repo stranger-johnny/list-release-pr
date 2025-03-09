@@ -41,7 +41,7 @@ jobs:
             PR_NUMBER=$(echo "$PR_DETAILS" | jq -r '.number')
 
             # 一度取得したPRはスキップ、またActionsがトリガーされたPRと同じPRもスキップ
-            if [[ ! " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]] && [[ "$PR_NUMBER" != "$MERGED_PR_NUMBER" ]]; then
+            if [[ ! " ${PR_NUMBERS[@]} " =~ " $PR_NUMBER " ]] || [[ "$PR_NUMBER" == "$MERGED_PR_NUMBER" ]]; then
               continue
             fi
 
