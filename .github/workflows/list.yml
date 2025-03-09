@@ -14,9 +14,10 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
-      - nameL Echo GitHub CLI version
-        run: gh --version
-        
+      - name: Echo GitHub CLI version
+        run: |
+          gh --version
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
