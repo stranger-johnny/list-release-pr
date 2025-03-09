@@ -9,6 +9,11 @@ jobs:
   list-prs:
     runs-on: ubuntu-latest
     steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
