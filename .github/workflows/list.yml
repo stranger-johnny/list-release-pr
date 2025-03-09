@@ -31,7 +31,7 @@ jobs:
           # PRに含まれるコミットを取得
           COMMIT_OIDS=$(gh pr view ${{ github.event.pull_request.number }} --json commits --jq '.commits[].oid')
 
-          # PRに含まれるコミットからPRのメタデータを取得
+          # PRに含まれるコミットからPRのメタデータを取得する
           for COMMIT_OID in $COMMIT_OIDS; do
             echo "Commit: $COMMIT_OID"
 
