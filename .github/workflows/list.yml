@@ -85,6 +85,7 @@ jobs:
           echo "$COMPRESSED_JSON"
           echo "pr_list=$(jq -R -s . <<< "$SLACK_TEXT")" >> "$GITHUB_OUTPUT"
           echo "slack_message_json=$COMPRESSED_JSON" >> "$GITHUB_OUTPUT"
+          echo "$pr_list"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -122,7 +123,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ steps.list-prs.outputs.pr_list }}
+                    "text": "${{ steps.list-prs.outputs.pr_list }}"
                   }
                 }
               ]
