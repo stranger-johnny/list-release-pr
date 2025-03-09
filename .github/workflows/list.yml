@@ -50,7 +50,7 @@ jobs:
             PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
           done
 
-          # PRリンクを作成し、Authorごとにグループ化
+          # PRのリンクを作成し、Authorごとにグループ化する
           for PR_NUMBER in "${PR_NUMBERS[@]}"; do
             PR_LINK="https://github.com/$REPO_OWNER/$REPO_NAME/pull/$PR_NUMBER"
             PR_LINK_BY_NUMBER["$PR_NUMBER"]="$PR_LINK"
@@ -61,7 +61,7 @@ jobs:
             PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE\n"
           done
 
-          # すべてのPRリストをテキストとして出力
+          # すべてのPRをテキストとして出力
           PR_LIST=""
           for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
             PR_LIST+=$(printf "*%s*\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
