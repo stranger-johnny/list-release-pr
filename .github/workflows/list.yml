@@ -1,4 +1,4 @@
-name: List Merged PRs for Release
+name: List Release PRs
 
 on:
   push:
