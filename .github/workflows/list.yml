@@ -96,8 +96,6 @@ jobs:
 
       - name: Send to Slack
         uses: slackapi/slack-github-action@v2.0.0
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_OAUTH_TOKEN }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
