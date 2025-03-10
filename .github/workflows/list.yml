@@ -89,7 +89,7 @@ jobs:
           # PRリンク作成およびAuthorごとにグループ化
           ##############################################################################
           for pr_number in "${PR_NUMBERS[@]}"; do
-            pr_link="${GITHUB_API}/pull/${pr_number}"
+            pr_link="https://github.com/$REPO_OWNER/$REPO_NAME/pull/${pr_number}"
             PR_LINK_BY_NUMBER["${pr_number}"]="${pr_link}"
 
             author="${PR_AUTHOR_BY_NUMBER[$pr_number]}"
