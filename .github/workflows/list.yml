@@ -17,83 +17,95 @@ jobs:
       - name: List PRs and Prepare Slack Message
         id: list-prs
         run: |
-          PR_NUMBERS=()
-          
+          ##############################################################################
+          # 定数・変数の設定
+          ##############################################################################
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          GITHUB_API="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}"
+          HEAD_COMMIT_ID="${{ github.event.head_commit.id }}"
+
+          ##############################################################################
+          # API呼び出し用関数
+          ##############################################################################
+          call_api() {
+            local endpoint="$1"
+            curl -s -H "Authorization: token ${TOKEN}" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 "$endpoint"
+          }
+
+          ##############################################################################
+          # PR情報格納用の配列初期化
+          ##############################################################################
+          declare -a PR_NUMBERS=()
           declare -A PR_AUTHOR_BY_NUMBER
           declare -A PR_TITLE_BY_NUMBER
           declare -A PR_LINK_BY_NUMBER 
-          declare -A PRS_BY_AUTHOR 
+          declare -A PRS_BY_AUTHOR
 
-          REPO_OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
-          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          ##############################################################################
+          # トリガーされたPR情報取得
+          ##############################################################################
+          TRIGGER_RESPONSE=$(call_api "$GITHUB_API/commits/$HEAD_COMMIT_ID/pulls")
+          TRIGGER_PR_NUMBER=$(echo "$TRIGGER_RESPONSE" | jq -r '.[0].number')
+          TRIGGER_PR_DETAILS=$(echo "$TRIGGER_RESPONSE" | jq -r '.[0]')
 
-          # ActionsがトリガーされたPRの番号を取得
-          TRIGGER_PR_NUMBER=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                                   -H "Accept: application/vnd.github.v3+json" \
-                                   "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/commits/${{ github.event.head_commit.id }}/pulls" | jq -r '.[].number')
+          ##############################################################################
+          # トリガーPRに含まれるコミットのSHAを取得
+          ##############################################################################
+          COMMIT_OIDS=$(call_api "$GITHUB_API/pulls/${TRIGGER_PR_NUMBER}/commits" | jq -r '.[].sha')
 
-          echo "Trigger PR: $TRIGGER_PR_NUMBER"                       
-          # ActionsがトリガーされたPRに含まれるコミットを取得
-          COMMIT_OIDS=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$TRIGGER_PR_NUMBER/commits" | jq -r '.[].sha')
-
-          # ActionsがトリガーされたPRに含まれるコミットからメタデータを取得
+          ##############################################################################
+          # コミットごとに関連PR情報を抽出（既に取得済み、またはトリガーPRは除外）
+          ##############################################################################
           for COMMIT_OID in $COMMIT_OIDS; do
-            echo "Commit: $COMMIT_OID"
+            echo "Commit: ${COMMIT_OID}"
+            pr_json=$(call_api "$GITHUB_API/commits/${COMMIT_OID}/pulls")
+            pr_entry=$(echo "$pr_json" | jq -r '.[0]')
+            pr_number=$(echo "$pr_entry" | jq -r '.number')
 
-            PR_DETAILS=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                          -H "Accept: application/vnd.github.v3+json" \
-                          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/commits/$COMMIT_OID/pulls" | jq -r '.[0]')
-            PR_NUMBER=$(echo "$PR_DETAILS" | jq -r '.number')
-
-            # 一度取得したPRはスキップ、またActionsがトリガーされたPRと同じPRもスキップ
-            if [[ "${PR_NUMBERS[@]}" =~ "$PR_NUMBER" ]] || [[ "$PR_NUMBER" == "$TRIGGER_PR_NUMBER" ]]; then
+            # 既に情報が取得済み、またはトリガーPRの場合はスキップ
+            if [[ -n "${PR_AUTHOR_BY_NUMBER[$pr_number]}" ]] || [[ "$pr_number" == "$TRIGGER_PR_NUMBER" ]]; then
               continue
             fi
 
-            PR_NUMBERS+=("$PR_NUMBER")
-            PR_AUTHOR=$(echo "$PR_DETAILS" | jq -r '.user.login')
-            PR_TITLE=$(echo "$PR_DETAILS" | jq -r '.title')
-            PR_AUTHOR_BY_NUMBER["$PR_NUMBER"]="$PR_AUTHOR"
-            PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
+            PR_NUMBERS+=("${pr_number}")
+            PR_AUTHOR_BY_NUMBER["${pr_number}"]=$(echo "$pr_entry" | jq -r '.user.login')
+            PR_TITLE_BY_NUMBER["${pr_number}"]=$(echo "$pr_entry" | jq -r '.title')
           done
 
-          # PRがない場合はhotfix扱いとして、ActionsがトリガーされたPRをリストに追加
+          ##############################################################################
+          # 他のPRが見つからなかった場合は、HotfixとみなしてトリガーPRの情報を使用
+          ##############################################################################
           if [ ${#PR_NUMBERS[@]} -eq 0 ]; then
-            PR_NUMBER=$TRIGGER_PR_NUMBER
-            PR_NUMBERS+=($PR_NUMBER) 
-
-            TRIGGER_PR_DETAILS=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                          -H "Accept: application/vnd.github.v3+json" \
-                          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/commits/${{ github.event.head_commit.id }}/pulls" | jq -r '.[0]')
-            PR_AUTHOR=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.user.login')
-            PR_TITLE=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.title')
-
-            PR_AUTHOR_BY_NUMBER["$PR_NUMBER"]="$PR_AUTHOR"
-            PR_TITLE_BY_NUMBER["$PR_NUMBER"]="$PR_TITLE"
+            PR_NUMBERS+=("${TRIGGER_PR_NUMBER}")
+            PR_AUTHOR_BY_NUMBER["${TRIGGER_PR_NUMBER}"]=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.user.login')
+            PR_TITLE_BY_NUMBER["${TRIGGER_PR_NUMBER}"]=$(echo "$TRIGGER_PR_DETAILS" | jq -r '.title')
           fi
 
-          # PRのリンクを作成し、Authorごとにグループ化
-          for PR_NUMBER in "${PR_NUMBERS[@]}"; do
-            PR_LINK="https://github.com/$REPO_OWNER/$REPO_NAME/pull/$PR_NUMBER"
-            PR_LINK_BY_NUMBER["$PR_NUMBER"]="$PR_LINK"
+          ##############################################################################
+          # PRリンク作成および作者ごとにグループ化
+          ##############################################################################
+          for pr_number in "${PR_NUMBERS[@]}"; do
+            pr_link="${GITHUB_API}/pull/${pr_number}"
+            PR_LINK_BY_NUMBER["${pr_number}"]="${pr_link}"
 
-            PR_AUTHOR="${PR_AUTHOR_BY_NUMBER[$PR_NUMBER]}"
-            PR_TITLE="${PR_TITLE_BY_NUMBER[$PR_NUMBER]}"
-
-            PRS_BY_AUTHOR["$PR_AUTHOR"]+="<$PR_LINK|#$PR_NUMBER> $PR_TITLE\n"
+            author="${PR_AUTHOR_BY_NUMBER[$pr_number]}"
+            title="${PR_TITLE_BY_NUMBER[$pr_number]}"
+            PRS_BY_AUTHOR["${author}"]+="<${pr_link}|#${pr_number}> ${title}\n"
           done
 
-          # すべてのPRをテキストとして出力
-          PR_LIST=""
-          for AUTHOR in "${!PRS_BY_AUTHOR[@]}"; do
-            PR_LIST+=$(printf "*%s*\n%b\n" "$AUTHOR" "${PRS_BY_AUTHOR[$AUTHOR]}")
+          ##############################################################################
+          # 出力用文字列の整形
+          ##############################################################################
+          output=""
+          for author in "${!PRS_BY_AUTHOR[@]}"; do
+            output+=$(printf "*%s*\n%b\n" "${author}" "${PRS_BY_AUTHOR[$author]}")
           done
 
-          echo "pr_list=$(jq -R -s . <<< "$PR_LIST")" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "pr_list=$(jq -R -s . <<< "${output}")" >> "$GITHUB_OUTPUT"
 
       - name: Send to Slack
         uses: slackapi/slack-github-action@v2.0.0
