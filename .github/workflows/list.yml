@@ -100,35 +100,32 @@ jobs:
           ##############################################################################
           # 出力用文字列の整形
           ##############################################################################
-          output=""
+          # ヘッダー用 block を作成
+          blocks='[{"type": "section", "text": {"type": "mrkdwn", "text": "*リリース予定のPR一覧です*"}}]'
+          
+          # 各authorごとに block を追加（※ 各blockは3000文字を超えないように注意する）
           for author in "${!PRS_BY_AUTHOR[@]}"; do
-            output+=$(printf "*%s*\n%b\n" "${author}" "${PRS_BY_AUTHOR[$author]}")
+            block_text=$(printf "*%s*\n%b" "$author" "${PRS_BY_AUTHOR[$author]}")
+            block=$(jq -n --arg text "$block_text" '{ "type": "section", "text": { "type": "mrkdwn", "text": $text } }')
+            blocks=$(echo "$blocks" | jq --argjson block "$block" '. += [$block]')
           done
 
-          echo "pr_list=$(jq -R -s . <<< "${output}")" >> "$GITHUB_OUTPUT"
+          for author in "${!PRS_BY_AUTHOR[@]}"; do
+            block_text=$(printf "*%s*\n%b" "$author" "${PRS_BY_AUTHOR[$author]}")
+            block=$(jq -n --arg text "$block_text" '{ "type": "section", "text": { "type": "mrkdwn", "text": $text } }')
+            blocks=$(echo "$blocks" | jq --argjson block "$block" '. += [$block]')
+          done
+          
+          # Slackのwebhook用に最終的なpayloadを作成
+          echo "pr_payload=$(echo "$blocks" | jq -c .)" >> "$GITHUB_OUTPUT"
 
       - name: Send to Slack
         uses: slackapi/slack-github-action@v2.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
-          payload: | 
+          payload: |
             {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*リリース予定のPR一覧です*"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ${{ steps.list-prs.outputs.pr_list }}
-                  }
-                }
-              ]
+              "blocks": ${{ steps.list-prs.outputs.pr_payload }}
             }
   
